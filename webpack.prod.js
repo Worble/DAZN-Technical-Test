@@ -25,8 +25,8 @@ module.exports = merge(common, {
     },
     plugins: [
         new MiniCssExtractPlugin({
-            filename: "[name].[min].css",
-            chunkFilename: "[id].[min].css"
+            filename: "[name].min.css",
+            chunkFilename: "[id].min.css"
         }),
         new OptimizeCssAssetsPlugin({
             cssProcessorPluginOptions: {
