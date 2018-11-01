@@ -1,4 +1,4 @@
-module SearchResult exposing (MovieResult, SearchResult, movieResultDecoder, searchResultsDecoder)
+module SearchResult exposing (MovieResult, SearchResult, calculateNextPage, calculatePreviousPage, movieResultDecoder, searchResultsDecoder)
 
 import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (optional, required)
@@ -56,3 +56,31 @@ movieResultDecoder =
         |> required "vote_count" Decode.int
         |> required "video" Decode.bool
         |> required "vote_average" Decode.float
+
+
+calculateNextPage : Maybe SearchResult -> Int
+calculateNextPage maybeSearchResult =
+    case maybeSearchResult of
+        Just searchResult ->
+            if searchResult.page < searchResult.totalPages then
+                searchResult.page + 1
+
+            else
+                searchResult.totalPages
+
+        Nothing ->
+            1
+
+
+calculatePreviousPage : Maybe SearchResult -> Int
+calculatePreviousPage maybeSearchResult =
+    case maybeSearchResult of
+        Just searchResult ->
+            if searchResult.page > 1 then
+                searchResult.page - 1
+
+            else
+                1
+
+        Nothing ->
+            1

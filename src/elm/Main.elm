@@ -25,6 +25,7 @@ main =
 
 type alias Model =
     { searchText : String
+    , lastSearchedText : String
     , searchResult : Maybe SearchResult
     , error : Maybe String
     }
@@ -33,6 +34,7 @@ type alias Model =
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { searchText = ""
+      , lastSearchedText = ""
       , searchResult = Nothing
       , error = Nothing
       }
@@ -50,6 +52,8 @@ type Msg
     | PerformSearch
     | ReceiveSearchMoviesResult (Result Http.Error SearchResult)
     | DismissError
+    | MovieSearchPreviousPage
+    | MovieSearchNextPage
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -62,7 +66,7 @@ update msg model =
             ( { model | searchText = query }, Cmd.none )
 
         PerformSearch ->
-            ( model, searchMovies model.searchText )
+            ( { model | lastSearchedText = model.searchText }, searchMovies model.searchText 1 )
 
         ReceiveSearchMoviesResult (Ok result) ->
             ( { model | searchResult = Just result }, Cmd.none )
@@ -72,6 +76,20 @@ update msg model =
 
         DismissError ->
             ( { model | error = Nothing }, Cmd.none )
+
+        MovieSearchPreviousPage ->
+            let
+                page =
+                    SearchResult.calculatePreviousPage model.searchResult
+            in
+            ( model, searchMovies model.lastSearchedText page )
+
+        MovieSearchNextPage ->
+            let
+                page =
+                    SearchResult.calculateNextPage model.searchResult
+            in
+            ( model, searchMovies model.lastSearchedText page )
 
 
 
@@ -87,19 +105,19 @@ subscriptions _ =
 -- HTTP
 
 
-searchMovies : String -> Cmd Msg
-searchMovies query =
-    Http.get (toSearchMovieUrl query) SearchResult.searchResultsDecoder
+searchMovies : String -> Int -> Cmd Msg
+searchMovies query page =
+    Http.get (toSearchMovieUrl query page) SearchResult.searchResultsDecoder
         |> Http.send ReceiveSearchMoviesResult
 
 
-toSearchMovieUrl : String -> String
-toSearchMovieUrl query =
+toSearchMovieUrl : String -> Int -> String
+toSearchMovieUrl query page =
     Url.crossOrigin "https://api.themoviedb.org"
         [ "3", "search", "movie" ]
         [ Url.string "api_key" "7bf3ac61a7810c5c951dbae19c1a2943"
         , Url.string "language" "en-US"
-        , Url.int "page" 1
+        , Url.int "page" page
         , Url.string "include_adult" "false"
         , Url.string "query" query
         ]
@@ -158,6 +176,16 @@ displayMovieSearchResults maybeSearchResult =
             else
                 div []
                     [ div [] (List.map displayMovie searchResult.result)
+                    , if searchResult.page > 1 then
+                        button [ onClick MovieSearchPreviousPage ] [ text "Previous Page" ]
+
+                      else
+                        text ""
+                    , if searchResult.page < searchResult.totalPages then
+                        button [ onClick MovieSearchNextPage ] [ text "Next Page" ]
+
+                      else
+                        text ""
                     ]
 
         Nothing ->
