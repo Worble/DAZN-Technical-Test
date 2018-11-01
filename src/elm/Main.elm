@@ -3,6 +3,7 @@ module Main exposing (main)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 
 
 main =
@@ -19,7 +20,7 @@ main =
 
 
 type alias Model =
-    { text : String
+    { searchText : String
     }
 
 
@@ -34,6 +35,7 @@ init _ =
 
 type Msg
     = NoOp
+    | UpdateSearchText String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -41,6 +43,9 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        UpdateSearchText query ->
+            ( { model | searchText = query }, Cmd.none )
 
 
 
@@ -59,5 +64,14 @@ subscriptions _ =
 view : Model -> Html Msg
 view model =
     div [ class "main" ]
-        [ text model.text
+        [ displaySearch
+        ]
+
+
+displaySearch : Html Msg
+displaySearch =
+    div [ class "movie-search" ]
+        [ h1 [] [ text "Search for movies" ]
+        , input [ type_ "text", placeholder "Type a name", onInput UpdateSearchText ] []
+        , button [ type_ "button" ] [ text "Search" ]
         ]
