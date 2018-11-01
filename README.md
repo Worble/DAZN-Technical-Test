@@ -1,4 +1,4 @@
-A technical test for reading movies from themoviedb.org. Files will be commented for explanation reasons where necessary. The application has been produced for mobile first, and would be further expanded for desktop support in the future. Additionally, here we will be using our api key directly in the code; in a real world example this would likely be behind our own server for security reasons.
+A technical test for reading movies from themoviedb.org. Files will be commented for explanation reasons where necessary. The application has been produced for mobile first, and would be further expanded for better desktop support in the future. Additionally, here we will be using our api key directly in the code; in a real world example this would likely be behind our own server for security reasons.
 
 
 # Project Structure
