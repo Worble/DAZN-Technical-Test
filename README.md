@@ -1,11 +1,11 @@
-A technical test for reading movies from themoviedb.org. Files will be commented for explanation reasons where necessary. Additionally, here we will be using our api key directly in the code; in a real world example this would likely be behind our own server for security reasons.
+A technical test for reading movies from themoviedb.org. Files will be commented for explanation reasons where necessary. The application has been produced for mobile first, and would be further expanded for desktop support in the future. Additionally, here we will be using our api key directly in the code; in a real world example this would likely be behind our own server for security reasons.
 
 
 # Project Structure
 
   
 
-All the source files can be found under `/src`. All Elm files live under `/src/elm`, other assets such as sass files live under `/src/assets`
+All the source files can be found under `/src`. All Elm files live under `/src/elm`, other assets such as sass files live under `/src/assets`. CSS has been created under the SMACSS structure, and following BEM class notation.
 
 All tests can be found under `/tests`
 

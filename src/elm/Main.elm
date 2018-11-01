@@ -150,9 +150,23 @@ displaySearch : Model -> Html Msg
 displaySearch model =
     div [ class "movie-search" ]
         [ h1 [] [ text "Search for movies" ]
-        , input [ type_ "text", placeholder "Type a name", onInput UpdateSearchText, onEnter PerformSearch ] []
+        , input
+            [ class "input"
+            , type_ "text"
+            , placeholder "Type a name"
+            , onInput UpdateSearchText
+            , onEnter
+                (if String.isEmpty model.searchText then
+                    NoOp
+
+                 else
+                    PerformSearch
+                )
+            ]
+            []
         , button
-            [ type_ "button"
+            [ class "btn btn__primary"
+            , type_ "button"
             , onClick PerformSearch
             , disabled
                 (if String.isEmpty model.searchText then
