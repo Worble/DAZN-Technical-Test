@@ -175,7 +175,7 @@ displayMovieSearchResults maybeSearchResult =
 
             else
                 div []
-                    [ div [] (List.map displayMovie searchResult.result)
+                    [ div [ class "movies-container" ] (List.map displayMovie searchResult.result)
                     , if searchResult.page > 1 then
                         button [ onClick MovieSearchPreviousPage ] [ text "Previous Page" ]
 
@@ -194,10 +194,19 @@ displayMovieSearchResults maybeSearchResult =
 
 displayMovie : MovieResult -> Html Msg
 displayMovie movie =
-    div []
-        [ div []
+    div [ class "movie" ]
+        [ div [ class "movie__img" ]
+            [ case movie.posterPath of
+                Just path ->
+                    img [ src ("https://image.tmdb.org/t/p/original" ++ path), alt movie.title ] []
+
+                Nothing ->
+                    text "NO IMAGE AVAILABLE"
+            ]
+        , div [ class "movie__information" ]
             [ h3 [] [ text movie.title ]
             , div [] [ text movie.overview ]
+            , br [] []
             , div [] [ text ("Release Date: " ++ movie.releaseDate) ]
             ]
         ]

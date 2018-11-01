@@ -1,0 +1,23 @@
+.movie{
+    width:50%;
+    display: flex;
+    flex-direction: column;
+}
+
+.movie__img{
+    padding:10px;
+}
+
+.movie__img>img{
+    max-height: 500px;
+    margin: auto;
+    display: block;
+}
+
+.movie__information{
+    padding:10px;
+}
+
+.movie-search{
+    text-align: center;
+}
