@@ -4,6 +4,7 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.Lazy as Lazy exposing (..)
 import Http
 import Json.Decode as Json
 import SearchResult exposing (MovieResult, SearchResult)
@@ -125,14 +126,19 @@ toSearchMovieUrl query page =
 
 
 -- VIEW
+{-
+   Our main view entry point; it largely points to other functions that cover the rendering of the application.
+   Here we use `lazy` so that we can cut down on rendering time; functions with called with `lazy` won't be
+   reevaluated unless their input changes.
+-}
 
 
 view : Model -> Html Msg
 view model =
     div [ class "main" ]
-        [ displayError model.error
-        , displaySearch model
-        , displayMovieSearchResults model.searchResult
+        [ lazy displayError model.error
+        , lazy displaySearch model
+        , lazy displayMovieSearchResults model.searchResult
         ]
 
 
@@ -188,22 +194,38 @@ displayMovieSearchResults maybeSearchResult =
                 text "No results found for that criteria"
 
             else
-                div []
-                    [ div [ class "movies-container" ] (List.map displayMovie searchResult.result)
-                    , if searchResult.page > 1 then
-                        button [ onClick MovieSearchPreviousPage ] [ text "Previous Page" ]
-
-                      else
-                        text ""
-                    , if searchResult.page < searchResult.totalPages then
-                        button [ onClick MovieSearchNextPage ] [ text "Next Page" ]
-
-                      else
-                        text ""
+                div [ class "movies-results" ]
+                    [ div [ class "movies-results__button-container" ]
+                        [ displayPreviousPageButton searchResult
+                        , displayNextPageButton searchResult
+                        ]
+                    , div [ class "movies-results__container" ] (List.map displayMovie searchResult.result)
+                    , div [ class "movies-results__button-container" ]
+                        [ displayPreviousPageButton searchResult
+                        , displayNextPageButton searchResult
+                        ]
                     ]
 
         Nothing ->
             text ""
+
+
+displayPreviousPageButton : SearchResult -> Html Msg
+displayPreviousPageButton searchResult =
+    if searchResult.page > 1 then
+        button [ class "btn btn__secondary", onClick MovieSearchPreviousPage ] [ text "Previous Page" ]
+
+    else
+        text ""
+
+
+displayNextPageButton : SearchResult -> Html Msg
+displayNextPageButton searchResult =
+    if searchResult.page < searchResult.totalPages then
+        button [ class "btn btn__secondary", onClick MovieSearchNextPage ] [ text "Next Page" ]
+
+    else
+        text ""
 
 
 displayMovie : MovieResult -> Html Msg
