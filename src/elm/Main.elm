@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg(..), main, searchMovies, update)
+module Main exposing (Model, Msg(..), main, searchMovies, update, validInput)
 
 import Browser
 import Html exposing (..)
@@ -27,6 +27,7 @@ main =
 type alias Model =
     { searchText : String
     , lastSearchedText : String
+    , year : Maybe Int
     , searchResult : Maybe SearchResult
     , error : Maybe String
     }
@@ -36,6 +37,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { searchText = ""
       , lastSearchedText = ""
+      , year = Nothing
       , searchResult = Nothing
       , error = Nothing
       }
@@ -55,6 +57,7 @@ type Msg
     | DismissError
     | MovieSearchPreviousPage
     | MovieSearchNextPage
+    | UpdateYear String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -67,7 +70,7 @@ update msg model =
             ( { model | searchText = query }, Cmd.none )
 
         PerformSearch ->
-            ( { model | lastSearchedText = model.searchText }, searchMovies model.searchText 1 )
+            ( { model | lastSearchedText = model.searchText }, searchMovies model.searchText 1 model.year)
 
         ReceiveSearchMoviesResult (Ok result) ->
             ( { model | searchResult = Just result }, Cmd.none )
@@ -83,14 +86,30 @@ update msg model =
                 page =
                     SearchResult.calculatePreviousPage model.searchResult
             in
-            ( model, searchMovies model.lastSearchedText page )
+            ( model, searchMovies model.lastSearchedText page model.year )
 
         MovieSearchNextPage ->
             let
                 page =
                     SearchResult.calculateNextPage model.searchResult
             in
-            ( model, searchMovies model.lastSearchedText page )
+            ( model, searchMovies model.lastSearchedText page model.year )
+
+        UpdateYear yearString ->
+            let
+                year =
+                    String.toInt yearString
+            in
+            ( { model | year = year }, Cmd.none )
+
+
+validInput : Model -> Bool
+validInput model =
+    let
+        textValid =
+            not (String.isEmpty model.searchText)
+    in
+    textValid
 
 
 
@@ -106,22 +125,34 @@ subscriptions _ =
 -- HTTP
 
 
-searchMovies : String -> Int -> Cmd Msg
-searchMovies query page =
-    Http.get (toSearchMovieUrl query page) SearchResult.searchResultsDecoder
+searchMovies : String -> Int -> Maybe Int -> Cmd Msg
+searchMovies query page maybeYear =
+    Http.get (toSearchMovieUrl query page maybeYear) SearchResult.searchResultsDecoder
         |> Http.send ReceiveSearchMoviesResult
 
 
-toSearchMovieUrl : String -> Int -> String
-toSearchMovieUrl query page =
+toSearchMovieUrl : String -> Int -> Maybe Int -> String
+toSearchMovieUrl query page maybeYear =
+    let
+        baseQueries =
+            [ Url.string "api_key" "7bf3ac61a7810c5c951dbae19c1a2943"
+            , Url.string "language" "en-US"
+            , Url.int "page" page
+            , Url.string "include_adult" "false"
+            , Url.string "query" query
+            ]
+
+        queries =
+            case maybeYear of
+                Just year ->
+                    Url.string "year" (String.fromInt year) :: baseQueries
+
+                Nothing ->
+                    baseQueries
+    in
     Url.crossOrigin "https://api.themoviedb.org"
         [ "3", "search", "movie" ]
-        [ Url.string "api_key" "7bf3ac61a7810c5c951dbae19c1a2943"
-        , Url.string "language" "en-US"
-        , Url.int "page" page
-        , Url.string "include_adult" "false"
-        , Url.string "query" query
-        ]
+        queries
 
 
 
@@ -162,11 +193,25 @@ displaySearch model =
             , placeholder "Type a name"
             , onInput UpdateSearchText
             , onEnter
-                (if String.isEmpty model.searchText then
-                    NoOp
+                (if validInput model then
+                    PerformSearch
 
                  else
+                    NoOp
+                )
+            ]
+            []
+        , input
+            [ class "input"
+            , type_ "number"
+            , placeholder "Enter a year"
+            , onInput UpdateYear
+            , onEnter
+                (if validInput model then
                     PerformSearch
+
+                 else
+                    NoOp
                 )
             ]
             []
@@ -175,11 +220,11 @@ displaySearch model =
             , type_ "button"
             , onClick PerformSearch
             , disabled
-                (if String.isEmpty model.searchText then
-                    True
+                (if validInput model then
+                    False
 
                  else
-                    False
+                    True
                 )
             ]
             [ text "Search" ]
