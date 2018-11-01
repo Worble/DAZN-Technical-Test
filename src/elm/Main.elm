@@ -26,12 +26,18 @@ main =
 type alias Model =
     { searchText : String
     , searchResult : Maybe SearchResult
+    , error : Maybe String
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model "Hello World" Nothing, Cmd.none )
+    ( { searchText = ""
+      , searchResult = Nothing
+      , error = Nothing
+      }
+    , Cmd.none
+    )
 
 
 
@@ -43,6 +49,7 @@ type Msg
     | UpdateSearchText String
     | PerformSearch
     | ReceiveSearchMoviesResult (Result Http.Error SearchResult)
+    | DismissError
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -61,7 +68,10 @@ update msg model =
             ( { model | searchResult = Just result }, Cmd.none )
 
         ReceiveSearchMoviesResult (Err _) ->
-            ( model, Cmd.none )
+            ( { model | error = Just "Whoops! Something went wrong, please try again later." }, Cmd.none )
+
+        DismissError ->
+            ( { model | error = Nothing }, Cmd.none )
 
 
 
@@ -102,17 +112,39 @@ toSearchMovieUrl query =
 view : Model -> Html Msg
 view model =
     div [ class "main" ]
-        [ displaySearch
+        [ displayError model.error
+        , displaySearch model
         , displayMovieSearchResults model.searchResult
         ]
 
 
-displaySearch : Html Msg
-displaySearch =
+displayError : Maybe String -> Html Msg
+displayError maybeError =
+    case maybeError of
+        Just error ->
+            div [ onClick DismissError ] [ text error ]
+
+        Nothing ->
+            text ""
+
+
+displaySearch : Model -> Html Msg
+displaySearch model =
     div [ class "movie-search" ]
         [ h1 [] [ text "Search for movies" ]
         , input [ type_ "text", placeholder "Type a name", onInput UpdateSearchText, onEnter PerformSearch ] []
-        , button [ type_ "button", onClick PerformSearch ] [ text "Search" ]
+        , button
+            [ type_ "button"
+            , onClick PerformSearch
+            , disabled
+                (if String.isEmpty model.searchText then
+                    True
+
+                 else
+                    False
+                )
+            ]
+            [ text "Search" ]
         ]
 
 
